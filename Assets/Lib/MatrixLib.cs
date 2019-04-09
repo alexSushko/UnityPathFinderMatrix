@@ -6,25 +6,27 @@ using UnityEngine;
 
 namespace GraphPathFinder.Lib {
     public static class MatrixLib {
-        public static float[, ] CalculateDistanceMatrix (Vector2[] points, int layer) {
+        public static float[, ] CalculateDistanceMatrix (Vector2[] points, int layer, float maxDistance) {
             var matrix = new float[points.Length, points.Length];
+            Debug.Log (matrix.Length);
 
             for (int i = 0; i < points.Length; i++) {
-                for (int k = 0; k < points.Length; k++) {
+                for (int k = i + 1; k < points.Length; k++) {
 
                     if (i != k) {
-                        matrix[i, k] = CalculatDistanceBetweenPoints (
+                        matrix[i, k] = matrix[k, i] = CalculatDistanceBetweenPoints (
                             points[i],
                             points[k],
-                            layer
+                            layer,
+                            maxDistance
                         );
                     }
                 }
             }
             return matrix;
         }
-        private static float CalculatDistanceBetweenPoints (Vector2 point1, Vector2 point2, int layer) {
-            if (CheckCollisionBetweenPoints (point1, point2, layer)) {
+        private static float CalculatDistanceBetweenPoints (Vector2 point1, Vector2 point2, int layer, float maxDistance) {
+            if ((point1 - point2).magnitude > maxDistance || CheckCollisionBetweenPoints (point1, point2, layer)) {
                 return float.MaxValue;
             } else {
                 return (point1 - point2).magnitude;

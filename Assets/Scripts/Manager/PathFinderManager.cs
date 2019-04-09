@@ -7,6 +7,10 @@ using UnityEngine;
 namespace GraphPathFinder {
     [AddComponentMenu ("GPF/Manager")]
     public class PathFinderManager : MonoBehaviour {
+        public GameObject From;
+        public GameObject To;
+        public int TestCount;
+        private List<Vector2> Path;
         #region Settings
         public bool DrawPaths;
         public bool UpdatePathsPerFrame;
@@ -15,6 +19,7 @@ namespace GraphPathFinder {
         public bool TestWriteToFile;
         public string PathToFile;
         public LayerMask layer;
+        public float MaxDistance;
         #endregion
 
         private Vector2[] _points;
@@ -33,9 +38,13 @@ namespace GraphPathFinder {
             if (UpdatePathsPerFrame) {
                 UpdatePoints ();
             }
+            for (int i = 0; i < TestCount; i++)
+                this.Path = GetPath (From.transform.position, To.transform.position);
+
         }
         private void OnDrawGizmos () {
             if (DrawPaths && _points != null && distanceMatrix != null) {
+                Gizmos.color = Color.white;
                 for (int i = 0; i < _points.Length; i++) {
                     for (int j = 0; j < _points.Length; j++) {
                         if (distanceMatrix[i, j] != 0 && distanceMatrix[i, j] < float.MaxValue) {
@@ -43,6 +52,14 @@ namespace GraphPathFinder {
                         }
                     }
                 }
+            }
+            if (this.Path != null && this.Path.Any ()) {
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine (From.transform.position, this.Path[0]);
+                for (int i = 0; i < this.Path.Count - 1; i++) {
+                    Gizmos.DrawLine (this.Path[i], this.Path[i + 1]);
+                }
+                Gizmos.DrawLine (this.Path[this.Path.Count - 1], To.transform.position);
             }
         }
         #endregion
@@ -68,7 +85,7 @@ namespace GraphPathFinder {
         public List<Vector2> GetPath (Vector2 from, Vector2 to) {
             var indexFrom = GetNearestPointIndex (from);
             var indexTo = GetNearestPointIndex (to);
-            var path = RestorePath (indexFrom, indexTo);
+            var path = RestorePath (indexTo, indexFrom);
             return path;
         }
         #endregion
@@ -87,7 +104,7 @@ namespace GraphPathFinder {
         }
 
         private void CalculateDistanceMatrix () {
-            this.distanceMatrix = MatrixLib.CalculateDistanceMatrix (this._points, layer);
+            this.distanceMatrix = MatrixLib.CalculateDistanceMatrix (this._points, layer, MaxDistance);
             PrintMatrix (this.distanceMatrix, "dist.txt");
         }
 
